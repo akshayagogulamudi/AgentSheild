@@ -36,13 +36,8 @@ app.include_router(policies.router)
 app.include_router(events.router)
 app.include_router(gateway.router)
 app.include_router(approvals.router)
-
-# Conditionally include agent route if it exists
-try:
-    from routes import agent
-    app.include_router(agent.router)
-except ImportError:
-    pass
+from routes import agent
+app.include_router(agent.router)
 
 
 @app.get("/")
