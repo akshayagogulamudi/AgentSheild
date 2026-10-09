@@ -11,6 +11,13 @@ from .schemas import (
     SecurityClassificationEnum,
     SecurityEventDecisionEnum,
 )
+from .notification_schemas import (
+    NotificationRecordSchema,
+    EmailDeliverySchema,
+    SMSDeliverySchema,
+    NotificationHistorySchema,
+    NotificationSummarySchema,
+)
 
 __all__ = [
     "ToolCallRequest",
@@ -24,4 +31,9 @@ __all__ = [
     "EmailOutboxSchema",
     "SecurityClassificationEnum",
     "SecurityEventDecisionEnum",
+    "NotificationRecordSchema",
+    "EmailDeliverySchema",
+    "SMSDeliverySchema",
+    "NotificationHistorySchema",
+    "NotificationSummarySchema",
 ]

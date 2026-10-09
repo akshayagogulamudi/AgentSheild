@@ -1,14 +1,16 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import {
-  LayoutDashboard, Mail, Bot, ScanSearch, ShieldCheck, Radar, SlidersHorizontal, ScrollText, FlaskConical, BookOpen, LogOut, Menu, Shield,
+  LayoutDashboard, Mail, Bot, ScanSearch, ShieldCheck, Radar, SlidersHorizontal, ScrollText, FlaskConical, BookOpen, LogOut, Menu, Shield, Bell,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/notifications", label: "Notifications", icon: Bell },
   { to: "/emails", label: "Email Security", icon: Mail },
   { to: "/agents", label: "Agent Monitor", icon: Bot },
   { to: "/dlp", label: "Data Loss Prevention", icon: ScanSearch },
@@ -24,12 +26,21 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const qc = useQueryClient();
   const navigate = useNavigate();
+
+  // Poll for notification count every 30 seconds
+  const { data: criticalCount = 0 } = useQuery({
+    queryKey: ["criticalNotificationCount"],
+    queryFn: () => api.getCriticalNotificationCount(),
+    refetchInterval: 30000, // 30 seconds
+  });
+
   async function signOut() {
     await qc.cancelQueries();
     qc.clear();
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
+
   return (
     <div className="flex min-h-screen">
       <aside className={cn("fixed inset-y-0 left-0 z-40 w-64 border-r border-sidebar-border bg-sidebar transition-transform md:translate-x-0", open ? "translate-x-0" : "-translate-x-full")}>
@@ -43,10 +54,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav className="space-y-0.5 p-3">
           {NAV.map((n) => (
             <Link key={n.to} to={n.to} onClick={() => setOpen(false)}
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground relative"
               activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground shadow-glow" }}>
               <n.icon className="h-4 w-4" />
               {n.label}
+              {n.to === "/notifications" && criticalCount > 0 && (
+                <span className="absolute right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                  {criticalCount > 9 ? "9+" : criticalCount}
+                </span>
+              )}
             </Link>
           ))}
         </nav>

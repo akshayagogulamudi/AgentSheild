@@ -3,7 +3,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import init_db, seed_demo_data
-from routes import health, policies, events, gateway, approvals
+from routes import health, policies, events, gateway, approvals, notifications
 
 # Initialize database
 init_db()
@@ -38,6 +38,7 @@ app.include_router(policies.router)
 app.include_router(events.router)
 app.include_router(gateway.router)
 app.include_router(approvals.router)
+app.include_router(notifications.router)
 from routes import agent
 app.include_router(agent.router)
 

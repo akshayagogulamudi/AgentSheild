@@ -1,0 +1,243 @@
+================================================================================
+                    TEST EMAIL & SMS ALERTS - RIGHT NOW
+================================================================================
+
+SETUP COMPLETE ✅
+
+Backend: Running on http://localhost:8000
+Frontend: Running on http://localhost:8080
+Email: LIVE (Gmail SMTP configured)
+SMS: SIMULATED (Twilio configured)
+
+================================================================================
+
+QUICK TEST - 5 STEPS:
+================================================================================
+
+1. OPEN BROWSER
+   → http://localhost:8080
+
+2. LOGIN
+   → Click "Enter Demo" button
+   → You're automatically logged in
+
+3. GO TO ATTACK SIMULATION LAB
+   → Click "Attack Simulation Lab" in sidebar
+   → OR: http://localhost:8080/lab
+
+4. TRIGGER A THREAT
+   → Click "Data Exfiltration" scenario
+   → System simulates malicious agent trying to exfiltrate data
+   → Security gateway BLOCKS it
+
+5. CHECK EMAIL
+   → Open: https://mail.google.com
+   → Look for email from AgentShield
+   → Subject: "Security Alert: BLOCKED"
+   → You'll see incident details
+
+BONUS: Check Dashboard
+   → Go to: http://localhost:8080/notifications
+   → See the alert with email status: SENT ✅
+
+================================================================================
+
+WHAT HAPPENS:
+================================================================================
+
+1. You trigger attack scenario
+   ↓
+2. System detects threat
+   ↓
+3. Security gateway BLOCKS action (prevents execution)
+   ↓
+4. Notification created with incident ID
+   ↓
+5. EMAIL SENT to: agentshield.demo@gmail.com
+   ↓
+6. SMS SIMULATED (would send to +1234567890 if Twilio connected)
+   ↓
+7. Dashboard shows alert with:
+   - Incident ID
+   - Threat type
+   - Email delivery status: SENT ✅
+   - SMS delivery status: SIMULATED
+
+================================================================================
+
+EMAIL DETAILS:
+================================================================================
+
+To: agentshield.demo@gmail.com
+From: AgentShield AI Security System
+Subject: 🚨 Security Alert: BLOCKED - Agent: [AgentName]
+
+Content includes:
+- Incident ID (unique identifier)
+- Timestamp (when threat occurred)
+- Severity (CRITICAL, HIGH, etc.)
+- Agent name (which AI agent tried it)
+- Tool attempted (send_email, read_file, etc.)
+- Threat category (prompt_injection, data_exfiltration, etc.)
+- Decision (BLOCKED = threat prevented)
+- Dashboard link to view full details
+
+Security: API keys and passwords are REDACTED in the email
+
+================================================================================
+
+VERIFY EMAIL SENT:
+================================================================================
+
+Step 1: Open Gmail
+   https://mail.google.com
+
+Step 2: No login needed (if already logged in)
+   If not logged in:
+   Email: agentshield.demo@gmail.com
+   (Password is embedded in system config)
+
+Step 3: Check Inbox
+   Look for emails with subject:
+   "Security Alert: BLOCKED"
+
+Step 4: View Email
+   Click to open
+   See full incident details
+   Date/time of threat
+   What was blocked
+   Why it was blocked
+
+Step 5: Check Dashboard
+   Go to: http://localhost:8080/notifications
+   See the same incident with email delivery status
+
+================================================================================
+
+SCENARIOS TO TEST:
+================================================================================
+
+1. DATA EXFILTRATION
+   Best for testing
+   Sends email immediately
+   Severity: CRITICAL
+   Result: Email arrives in inbox
+
+2. PROMPT INJECTION
+   Agent receives hidden instructions
+   Severity: HIGH
+   Result: Email sent
+
+3. UNAUTHORIZED ACCESS
+   Agent tries to read restricted file
+   Severity: MEDIUM
+   Result: May not trigger (threshold is HIGH)
+
+================================================================================
+
+SMS STATUS:
+================================================================================
+
+Currently: SIMULATED
+
+Why?
+- Using demo Twilio account
+- SMS shows as "SIMULATED" in dashboard
+- No real SMS is sent
+
+To enable real SMS:
+1. Create Twilio account: https://www.twilio.com
+2. Get Account SID, Auth Token, Phone Number
+3. Update backend/.env with your credentials
+4. Restart backend
+5. SMS will send to +1234567890 (or your number)
+
+Current: Simulated is fine for testing
+
+================================================================================
+
+DASHBOARD VIEWS:
+================================================================================
+
+Main Dashboard: http://localhost:8080/dashboard
+- Overview of security events
+- Agent activity
+- Threat counts
+
+Notifications: http://localhost:8080/notifications (NEW!)
+- List of all alerts
+- Email delivery status: SENT, FAILED, PENDING, SIMULATED
+- SMS delivery status
+- Click incident to see full details
+
+Attack Lab: http://localhost:8080/lab
+- Trigger test attacks
+- Watch system block them
+- See alerts created in real-time
+
+Audit Logs: http://localhost:8080/audit
+- Full history of all events
+- All blocked actions
+- All allowed actions
+
+API Docs: http://localhost:8000/docs
+- Interactive API explorer
+- Test endpoints directly
+
+================================================================================
+
+IF EMAIL DOESN'T ARRIVE:
+================================================================================
+
+1. Wait 5 seconds (email is fast but may take a moment)
+
+2. Check Gmail:
+   https://mail.google.com
+
+3. Check spam folder (sometimes emails go there)
+
+4. Reload inbox (F5)
+
+5. Check backend logs for errors
+   Terminal should show if email was sent or if there was an error
+
+6. If still nothing:
+   - Check backend is running: http://localhost:8000
+   - Restart backend:
+     $env:PYTHONIOENCODING="utf-8"
+     python -m uvicorn main:app --reload --port 8000
+
+================================================================================
+
+CONFIGURATION:
+================================================================================
+
+Email (Gmail):
+✅ Email: agentshield.demo@gmail.com
+✅ SMTP: smtp.gmail.com:587 (TLS)
+✅ App Password: rczj xnzq vthh bczj
+✅ Recipients: agentshield.demo@gmail.com
+✅ Status: LIVE (real emails send)
+
+SMS (Twilio):
+⚠️ Account SID: AC12e3f4e5d6c7b8a9f0e1d2c3b4a5f6e
+⚠️ Auth Token: 4e7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d
+⚠️ Phone: +1234567890
+⚠️ Status: SIMULATED (demo account)
+
+Mode: NOTIFICATION_MODE=live
+
+================================================================================
+
+SUMMARY:
+================================================================================
+
+✅ Backend: RUNNING
+✅ Frontend: RUNNING
+✅ Email: CONFIGURED & LIVE
+✅ SMS: CONFIGURED & SIMULATED
+✅ Auto-login: WORKING
+✅ Ready to test: YES!
+
+Next: Open http://localhost:8080 and test!
+

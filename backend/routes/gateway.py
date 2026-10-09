@@ -1,20 +1,54 @@
 """Security gateway evaluation routes."""
-from fastapi import APIRouter, Depends, HTTPException, Query
+import os
+import json
+import logging
+from typing import Dict, Any, List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from sqlalchemy.orm import Session
 from database import get_db
 from models import ToolCallRequest
 from security.gateway import GatewayEngine
 from database.models import SecurityEvent
-from typing import Dict, Any, List, Optional
-import json
+from services.notification_service import NotificationService
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+def send_threat_notification(
+    db_session,
+    security_event_id: int,
+    agent_name: str,
+    attempted_tool: str,
+    threat_category: str,
+    severity: str,
+    decision: str,
+    arguments: Optional[Dict[str, Any]] = None
+):
+    """Background task to send threat notifications."""
+    try:
+        service = NotificationService(db_session)
+        if decision in ["BLOCK", "REQUIRE_APPROVAL"]:
+            notification = service.notify_on_threat(
+                security_event_id=security_event_id,
+                agent_name=agent_name,
+                attempted_tool=attempted_tool,
+                threat_category=threat_category,
+                severity=severity,
+                decision=decision,
+                arguments=arguments
+            )
+            if notification:
+                logger.info(f"Threat notification sent for incident {notification.incident_id}")
+    except Exception as e:
+        logger.error(f"Failed to send threat notification: {e}")
 
 
 @router.post("/api/gateway/evaluate")
 async def evaluate_tool_call(
     request: ToolCallRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     """
     Evaluate a tool call through the security gateway.
@@ -22,6 +56,7 @@ async def evaluate_tool_call(
     Args:
         request: ToolCallRequest with tool_name, arguments, user_request, agent_name, agent_role.
         db: Database session
+        background_tasks: FastAPI background tasks for async notification
         
     Returns:
         GatewayDecision with decision, risk_score, checks, and explanation
@@ -40,9 +75,48 @@ async def evaluate_tool_call(
             agent_role=agent_role
         )
         
+        # Trigger notifications asynchronously for BLOCK and REQUIRE_APPROVAL
+        if decision.decision in ["BLOCK", "REQUIRE_APPROVAL"]:
+            # Determine threat category and severity
+            threat_category = "unauthorized_access"
+            severity = "medium"
+            
+            if decision.checks:
+                for check in decision.checks:
+                    if not check.passed:
+                        if "injection" in check.name.lower():
+                            threat_category = "prompt_injection"
+                            severity = "high"
+                        elif "leakage" in check.name.lower():
+                            threat_category = "data_leakage"
+                            severity = "high"
+                        elif "permission" in check.name.lower():
+                            threat_category = "unauthorized_access"
+                            severity = "medium"
+            
+            # Map risk score to severity
+            if decision.risk_score >= 70:
+                severity = "critical"
+            elif decision.risk_score >= 50:
+                severity = "high"
+            
+            # Schedule notification in background
+            background_tasks.add_task(
+                send_threat_notification,
+                db,
+                security_event_id=db.query(SecurityEvent).order_by(SecurityEvent.id.desc()).first().id,
+                agent_name=request.agent_name,
+                attempted_tool=request.tool_name,
+                threat_category=threat_category,
+                severity=severity,
+                decision=decision.decision,
+                arguments=request.arguments
+            )
+        
         return decision.to_dict()
     
     except Exception as e:
+        logger.error(f"Gateway evaluation failed: {e}")
         raise HTTPException(status_code=500, detail=f"Gateway evaluation failed: {str(e)}")
 
 
@@ -82,6 +156,7 @@ async def get_gateway_events(
         
         return result
     except Exception as e:
+        logger.error(f"Failed to retrieve events: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to retrieve events: {str(e)}")
 
 
@@ -102,5 +177,9 @@ async def gateway_health():
             "data_leakage_prevention",
             "risk_scorer",
             "intent_validator"
-        ]
+        ],
+        "notifications": {
+            "enabled": True,
+            "mode": os.getenv("NOTIFICATION_MODE", "mock")
+        }
     }

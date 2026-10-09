@@ -192,4 +192,58 @@ export const api = {
       },
     ];
   },
+
+  // Get notification summary
+  async getNotificationSummary() {
+    try {
+      const response = await fetch(`${API_BASE}/notifications/summary`, {
+        headers: { "Accept": "application/json" },
+      });
+      if (!response.ok) throw new Error(`Failed to fetch notification summary: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error("Failed to fetch notification summary:", error);
+      return {
+        total_critical: 0,
+        total_high: 0,
+        unread_count: 0,
+        recent_incidents: []
+      };
+    }
+  },
+
+  // Get notification history
+  async getNotifications(limit: number = 50, offset: number = 0, severity?: string) {
+    try {
+      const params = new URLSearchParams({
+        limit: limit.toString(),
+        offset: offset.toString(),
+      });
+      if (severity) params.append("severity", severity);
+
+      const response = await fetch(`${API_BASE}/notifications?${params}`, {
+        headers: { "Accept": "application/json" },
+      });
+      if (!response.ok) throw new Error(`Failed to fetch notifications: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error);
+      return { items: [], total: 0, limit, offset };
+    }
+  },
+
+  // Get critical notification count
+  async getCriticalNotificationCount() {
+    try {
+      const response = await fetch(`${API_BASE}/notifications/critical/count`, {
+        headers: { "Accept": "application/json" },
+      });
+      if (!response.ok) throw new Error(`Failed to fetch critical count: ${response.statusText}`);
+      const data = await response.json();
+      return data.count || 0;
+    } catch (error) {
+      console.error("Failed to fetch critical count:", error);
+      return 0;
+    }
+  },
 };

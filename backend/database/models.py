@@ -143,3 +143,81 @@ class EmailOutbox(Base):
 
     def __repr__(self):
         return f"<EmailOutbox(to={self.recipient})>"
+
+
+
+# ===== NOTIFICATION MODELS =====
+
+class NotificationStatus(str, enum.Enum):
+    """Notification delivery status."""
+    PENDING = "pending"
+    SIMULATED = "simulated"
+    SENT = "sent"
+    FAILED = "failed"
+
+
+class NotificationChannel(str, enum.Enum):
+    """Notification delivery channel."""
+    EMAIL = "email"
+    SMS = "sms"
+
+
+class NotificationRecord(Base):
+    """Track all threat notifications."""
+    __tablename__ = "notification_records"
+
+    id = Column(Integer, primary_key=True)
+    security_event_id = Column(Integer, ForeignKey("security_events.id"), nullable=False)
+    incident_id = Column(String(50), unique=True, nullable=False)
+    agent_name = Column(String(100), nullable=False)
+    attempted_tool = Column(String(100), nullable=False)
+    threat_category = Column(String(100), nullable=False)
+    severity = Column(String(20), nullable=False)
+    decision = Column(String(50), nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_notification_at = Column(DateTime, nullable=True)
+    notification_count = Column(Integer, default=0)
+    is_demo = Column(Boolean, default=True)
+
+    def __repr__(self):
+        return f"<NotificationRecord(incident_id={self.incident_id}, severity={self.severity})>"
+
+
+class EmailDelivery(Base):
+    """Track email notification delivery."""
+    __tablename__ = "email_deliveries"
+
+    id = Column(Integer, primary_key=True)
+    notification_record_id = Column(Integer, ForeignKey("notification_records.id"), nullable=False)
+    recipient_email = Column(String(100), nullable=False)
+    status = Column(Enum(NotificationStatus), default=NotificationStatus.PENDING)
+    subject = Column(String(255))
+    body_preview = Column(String(500))
+    error_message = Column(Text, nullable=True)
+    provider_reference = Column(String(255), nullable=True)
+    sent_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    is_demo = Column(Boolean, default=True)
+
+    def __repr__(self):
+        return f"<EmailDelivery(to={self.recipient_email}, status={self.status})>"
+
+
+class SMSDelivery(Base):
+    """Track SMS notification delivery."""
+    __tablename__ = "sms_deliveries"
+
+    id = Column(Integer, primary_key=True)
+    notification_record_id = Column(Integer, ForeignKey("notification_records.id"), nullable=False)
+    recipient_phone = Column(String(20), nullable=False)
+    status = Column(Enum(NotificationStatus), default=NotificationStatus.PENDING)
+    message_preview = Column(String(160))
+    error_message = Column(Text, nullable=True)
+    provider_reference = Column(String(255), nullable=True)
+    sent_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    is_demo = Column(Boolean, default=True)
+
+    def __repr__(self):
+        return f"<SMSDelivery(to={self.recipient_phone}, status={self.status})>"

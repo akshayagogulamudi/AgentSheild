@@ -1,0 +1,227 @@
+================================================================================
+                   AGENTSHIELD AI - LOGIN & ALERTS SETUP
+================================================================================
+
+QUICK START - RIGHT NOW (No credentials needed):
+================================================================================
+
+1. Open http://localhost:8080 in your browser
+
+2. Click the "Enter Demo" button
+
+3. You're logged in! Dashboard appears automatically
+
+4. Click "Notifications" in the sidebar to see alerts page
+
+================================================================================
+
+TO SEE EMAIL/SMS ALERTS IN ACTION (Mock Mode - Simulated):
+================================================================================
+
+1. From Dashboard, click "Attack Simulation Lab" in sidebar
+
+2. You'll see attack scenarios:
+   - Data Exfiltration
+   - Prompt Injection
+   - Unauthorized Access
+   - etc.
+
+3. Click any scenario (e.g., "Data Exfiltration")
+
+4. The system will:
+   - Detect the threat ✓
+   - BLOCK the action ✓
+   - Create notification record ✓
+   - Simulate email notification ✓
+   - Simulate SMS notification ✓
+
+5. Go to "Notifications" page → See the alert with:
+   - Incident ID
+   - Threat type
+   - Email delivery status (simulated)
+   - SMS delivery status (simulated)
+
+================================================================================
+
+TO ENABLE REAL EMAIL ALERTS (Optional):
+================================================================================
+
+Step 1: Get Gmail App Password
+   - Go to: https://myaccount.google.com/
+   - Click "Security"
+   - Scroll to "App passwords"
+   - Select "Mail" and "Windows Computer"
+   - Google gives you 16-character password
+   - Copy it
+
+Step 2: Edit backend/.env file
+   Replace this:
+     NOTIFICATION_MODE=mock
+     SMTP_USERNAME=your_email@gmail.com
+     SMTP_PASSWORD=your_app_password
+     ALERT_EMAIL_TO=security@company.com
+
+   With your actual values:
+     NOTIFICATION_MODE=live
+     SMTP_USERNAME=your_actual_email@gmail.com
+     SMTP_PASSWORD=xxxx xxxx xxxx xxxx
+     ALERT_EMAIL_TO=your_actual_email@gmail.com
+
+Step 3: Restart backend
+   - Stop the backend process (Ctrl+C)
+   - Run again:
+     $env:PYTHONIOENCODING="utf-8"
+     python -m uvicorn main:app --reload --port 8000
+
+Step 4: Test
+   - Go to Attack Simulation Lab
+   - Trigger a threat
+   - Check your Gmail inbox in ~2 seconds
+   - Real email arrives!
+
+================================================================================
+
+TO ENABLE REAL SMS ALERTS (Optional):
+================================================================================
+
+Step 1: Create Twilio Account
+   - Go to: https://www.twilio.com/try-twilio
+   - Sign up (free, $15 credit)
+   - Verify your phone number
+
+Step 2: Get Twilio Credentials
+   - Go to: https://console.twilio.com
+   - Find "Account SID" (under your name at top)
+   - Find "Auth Token" (click to show)
+   - Go to "Phone Numbers" → Copy your Twilio number
+
+Step 3: Edit backend/.env file
+   Add/replace:
+     TWILIO_ACCOUNT_SID=ACxxxxxxxxxx
+     TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxx
+     TWILIO_PHONE_NUMBER=+1234567890
+     ALERT_PHONE_TO=+1234567890
+
+Step 4: Verify recipient phone numbers (First time only)
+   - In Twilio console, go to "Verify"
+   - Send verification code to your phone
+   - Enter code to verify
+   - Now SMS will work
+
+Step 5: Restart backend
+   - Stop backend (Ctrl+C)
+   - Run again:
+     $env:PYTHONIOENCODING="utf-8"
+     python -m uvicorn main:app --reload --port 8000
+
+Step 6: Test
+   - Go to Attack Simulation Lab
+   - Trigger a threat
+   - Check your phone in ~2 seconds
+   - Real SMS arrives!
+
+================================================================================
+
+PAGES TO VISIT:
+================================================================================
+
+Dashboard: http://localhost:8080/dashboard
+   - Overview of security events
+
+Notifications: http://localhost:8080/notifications
+   - All threat alerts
+   - Email & SMS delivery status
+   - Incident details
+
+Attack Simulation Lab: http://localhost:8080/lab
+   - Trigger test threats
+   - See alerts in real-time
+
+Audit Logs: http://localhost:8080/audit
+   - Full security event history
+
+API Docs: http://localhost:8000/docs
+   - Interactive API explorer
+
+================================================================================
+
+MOCK MODE vs LIVE MODE:
+================================================================================
+
+MOCK MODE (Current - Safe):
+   - NOTIFICATION_MODE=mock
+   - No real emails sent
+   - No real SMS sent
+   - Logs show: "[MAIL] Email would be sent..."
+   - Perfect for testing and demos
+
+LIVE MODE (Real Alerts):
+   - NOTIFICATION_MODE=live
+   - Real emails via Gmail SMTP
+   - Real SMS via Twilio
+   - Requires credentials
+   - Ready for production
+
+Current: MOCK MODE ✓
+
+================================================================================
+
+WHAT TRIGGERS ALERTS:
+================================================================================
+
+HIGH SEVERITY (Triggers email + SMS):
+   ✓ Prompt injection detected
+   ✓ Data exfiltration attempt
+   ✓ Unauthorized file access
+   ✓ Malicious tool call
+
+MEDIUM SEVERITY (Optional):
+   ○ Suspicious intent mismatch
+   ○ Resource access denied
+
+BENIGN ACTIONS (No alert):
+   ✗ Normal tool usage
+   ✗ Allowed operations
+   ✗ Authorized access
+
+Current threshold: NOTIFICATION_MIN_SEVERITY=high
+
+================================================================================
+
+QUICK COMMANDS:
+================================================================================
+
+Restart Backend:
+   $env:PYTHONIOENCODING="utf-8"
+   python -m uvicorn main:app --reload --port 8000
+
+Restart Frontend:
+   npm run dev
+
+Run Tests:
+   cd backend
+   python test_notification_demo.py
+
+Check Backend API:
+   http://localhost:8000/docs
+
+================================================================================
+
+SUMMARY:
+================================================================================
+
+✅ Current: Demo mode (mock alerts)
+✅ Backend running: http://localhost:8000
+✅ Frontend running: http://localhost:8080
+✅ Auto-login: Click "Enter Demo"
+✅ See alerts: Go to Notifications page
+✅ Test threats: Attack Simulation Lab
+
+Optional:
+✓ Real emails: Add Gmail credentials + NOTIFICATION_MODE=live
+✓ Real SMS: Add Twilio credentials + verify phone
+
+================================================================================
+
+Questions? Check the full guide or restart the servers and try it!
+
