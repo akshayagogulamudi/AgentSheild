@@ -2,8 +2,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from database import get_db
-from database.models import SecurityEvent, ActivityLog
-from models import SecurityEventSchema, ActivityLogSchema
+from database.models import SecurityEvent, ActivityLog, Threat
+from models import SecurityEventSchema, ActivityLogSchema, ThreatSchema
 from typing import List, Optional
 from datetime import datetime
 import json
@@ -52,6 +52,45 @@ async def create_event(event_data: SecurityEventSchema, db: Session = Depends(ge
         return event
     except Exception as e:
         db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/api/threats", response_model=List[ThreatSchema])
+async def get_threats(
+    db: Session = Depends(get_db),
+    threat_category: Optional[str] = Query(None),
+    severity: Optional[str] = Query(None),
+    gateway_response: Optional[str] = Query(None),
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0)
+):
+    """
+    Get threats with optional filters.
+    
+    Args:
+        db: Database session
+        threat_category: Filter by threat category (optional)
+        severity: Filter by severity (optional)
+        gateway_response: Filter by gateway response (optional)
+        limit: Maximum results
+        offset: Pagination offset
+        
+    Returns:
+        List of threats
+    """
+    try:
+        query = db.query(Threat)
+        
+        if threat_category:
+            query = query.filter(Threat.threat_category == threat_category)
+        if severity:
+            query = query.filter(Threat.severity == severity)
+        if gateway_response:
+            query = query.filter(Threat.gateway_response == gateway_response)
+        
+        threats = query.order_by(Threat.timestamp.desc()).offset(offset).limit(limit).all()
+        return threats
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 

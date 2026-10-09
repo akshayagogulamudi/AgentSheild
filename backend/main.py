@@ -3,7 +3,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import init_db, seed_demo_data
-from routes import health, policies, events
+from routes import health, policies, events, gateway, approvals
 
 # Initialize database
 init_db()
@@ -34,6 +34,15 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(policies.router)
 app.include_router(events.router)
+app.include_router(gateway.router)
+app.include_router(approvals.router)
+
+# Conditionally include agent route if it exists
+try:
+    from routes import agent
+    app.include_router(agent.router)
+except ImportError:
+    pass
 
 
 @app.get("/")

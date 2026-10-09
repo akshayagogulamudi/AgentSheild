@@ -16,11 +16,31 @@ class SecurityEventDecisionEnum(str, Enum):
     REQUIRE_APPROVAL = "REQUIRE_APPROVAL"
 
 
+class CheckResultSchema(BaseModel):
+    """Schema for a single security check result."""
+    name: str = Field(..., description="Check name (e.g., 'tool_permission')")
+    passed: bool = Field(..., description="Whether check passed")
+    reason: str = Field(..., description="Explanation of result")
+    details: Dict[str, Any] = Field(default_factory=dict, description="Additional details")
+
+
+class GatewayDecisionSchema(BaseModel):
+    """Schema for security gateway decision."""
+    decision: str = Field(..., description="Decision: ALLOW, BLOCK, or REQUIRE_APPROVAL")
+    risk_score: int = Field(..., ge=0, le=100, description="Risk score 0-100")
+    risk_tier: str = Field(..., description="Risk tier: LOW, MEDIUM, HIGH, CRITICAL")
+    explanation: str = Field(..., description="Summary of decision")
+    checks: List[CheckResultSchema] = Field(..., description="List of security checks")
+    requires_approval: bool = Field(default=False, description="Whether approval is needed")
+    pending_approval_id: Optional[int] = Field(None, description="ID of pending approval if created")
+
+
 class ToolCallRequest(BaseModel):
     """Schema for tool call requests from AI agent."""
     tool_name: str = Field(..., description="Name of the tool to execute")
     arguments: Dict[str, Any] = Field(default_factory=dict, description="Tool arguments")
     agent_name: str = Field(default="default_agent", description="Name of the requesting agent")
+    agent_role: Optional[str] = Field(default="employee", description="Role/permission level of agent")
     user_request: Optional[str] = Field(None, description="Original user request for intent validation")
 
 
