@@ -20,14 +20,22 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
-  const [mode, setMode] = useState<"in" | "up">("in");
+  const [mode, setMode] = useState<"in" | "up" | "demo">("demo");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
 
+  // Auto-redirect to dashboard on localhost (demo mode)
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => data.session && navigate({ to: "/dashboard" }));
+    const isDemoMode = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+    if (isDemoMode) {
+      // Auto-navigate to dashboard for demo
+      navigate({ to: "/dashboard" });
+    } else {
+      // Check existing session for production
+      supabase.auth.getSession().then(({ data }) => data.session && navigate({ to: "/dashboard" }));
+    }
   }, [navigate]);
 
   async function submit(e: React.FormEvent) {
@@ -38,7 +46,7 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/dashboard` } });
         if (error) throw error;
         if (!data.session) { toast.success("Check your inbox to confirm your account."); return; }
-      } else {
+      } else if (mode === "in") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
@@ -54,12 +62,20 @@ function AuthPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <form onSubmit={submit} className="panel w-full max-w-sm space-y-4 p-8 shadow-glow">
         <div className="flex items-center gap-2"><Shield className="h-6 w-6 text-primary" /><span className="text-lg font-semibold">Sentinel AI</span></div>
-        <p className="text-sm text-muted-foreground">{mode === "in" ? "Sign in to your security console." : "Create a workspace — it comes pre-loaded with synthetic demo data."}</p>
-        <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-        <div className="space-y-2"><Label htmlFor="pw">Password</Label><Input id="pw" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
-        <Button type="submit" className="w-full" disabled={busy}>{busy ? "Please wait…" : mode === "in" ? "Sign in" : "Create account"}</Button>
-        <button type="button" className="w-full text-center text-sm text-muted-foreground hover:text-primary" onClick={() => setMode(mode === "in" ? "up" : "in")}>
-          {mode === "in" ? "No account? Create one" : "Have an account? Sign in"}
+        <p className="text-sm text-muted-foreground">
+          {mode === "demo" ? "Enter demo mode — explore with pre-loaded synthetic data." : mode === "in" ? "Sign in to your security console." : "Create a workspace — it comes pre-loaded with synthetic demo data."}
+        </p>
+        {mode !== "demo" && (
+          <>
+            <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+            <div className="space-y-2"><Label htmlFor="pw">Password</Label><Input id="pw" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+          </>
+        )}
+        <Button type="submit" className="w-full" disabled={busy}>
+          {busy ? "Please wait…" : mode === "demo" ? "Enter Demo" : mode === "in" ? "Sign in" : "Create account"}
+        </Button>
+        <button type="button" className="w-full text-center text-sm text-muted-foreground hover:text-primary" onClick={() => setMode(mode === "in" ? "up" : mode === "up" ? "demo" : "in")}>
+          {mode === "demo" ? "Have account? Sign in" : mode === "in" ? "No account? Create one" : "Skip to demo"}
         </button>
       </form>
     </div>
