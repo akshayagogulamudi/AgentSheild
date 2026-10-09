@@ -86,7 +86,13 @@ def override_get_db():
         db.close()
 
 
-app.dependency_overrides[get_db] = override_get_db
+@pytest.fixture(scope="module", autouse=True)
+def setup_test_db_override():
+    """Setup test database override for this module's tests."""
+    app.dependency_overrides[get_db] = override_get_db
+    yield
+    # Don't clear here - let conftest handle it
+
 
 client = TestClient(app)
 

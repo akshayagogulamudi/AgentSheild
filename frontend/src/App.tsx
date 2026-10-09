@@ -22,33 +22,35 @@ function LoadingSpinner() {
   )
 }
 
-// Layout wrapper for routes
-function LayoutWrapper({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="ml-64 mt-16 p-6 min-h-screen bg-slate-950">
-      {children}
-    </div>
-  )
-}
-
 export default function App() {
   return (
     <BrowserRouter>
-      <Sidebar />
-      <TopNav title="AgentShield" />
-      
-      <Suspense fallback={<LoadingSpinner />}>
-        <Routes>
-          <Route path="/" element={<LayoutWrapper><Overview /></LayoutWrapper>} />
-          <Route path="/playground" element={<LayoutWrapper><Playground /></LayoutWrapper>} />
-          <Route path="/gateway" element={<LayoutWrapper><SecurityGateway /></LayoutWrapper>} />
-          <Route path="/threats" element={<LayoutWrapper><ThreatDetection /></LayoutWrapper>} />
-          <Route path="/logs" element={<LayoutWrapper><ActivityLogs /></LayoutWrapper>} />
-          <Route path="/policies" element={<LayoutWrapper><SecurityPolicies /></LayoutWrapper>} />
-          <Route path="/lab" element={<LayoutWrapper><AttackSimulationLab /></LayoutWrapper>} />
-          <Route path="/settings" element={<LayoutWrapper><Settings /></LayoutWrapper>} />
-        </Routes>
-      </Suspense>
+      <div className="flex h-screen bg-slate-950">
+        {/* Sidebar */}
+        <Sidebar />
+        
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col overflow-hidden ml-64">
+          {/* Top Navigation */}
+          <TopNav title="AgentShield" />
+          
+          {/* Page Content */}
+          <div className="flex-1 overflow-y-auto pt-16">
+            <Suspense fallback={<LoadingSpinner />}>
+              <Routes>
+                <Route path="/" element={<Overview />} />
+                <Route path="/playground" element={<Playground />} />
+                <Route path="/gateway" element={<SecurityGateway />} />
+                <Route path="/threats" element={<ThreatDetection />} />
+                <Route path="/logs" element={<ActivityLogs />} />
+                <Route path="/policies" element={<SecurityPolicies />} />
+                <Route path="/lab" element={<AttackSimulationLab />} />
+                <Route path="/settings" element={<Settings />} />
+              </Routes>
+            </Suspense>
+          </div>
+        </div>
+      </div>
     </BrowserRouter>
   )
 }

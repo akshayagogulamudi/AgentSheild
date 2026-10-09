@@ -14,7 +14,7 @@ export default function Sidebar() {
   ]
 
   return (
-    <div className="fixed left-0 top-0 w-64 h-screen bg-[#0f1629] border-r border-slate-700 flex flex-col">
+    <div className="fixed left-0 top-0 w-64 h-screen bg-[#0f1629] border-r border-slate-700 flex flex-col z-40">
       {/* Header */}
       <div className="p-6 border-b border-slate-700 flex items-center gap-2">
         <Shield className="w-6 h-6 text-blue-500" />

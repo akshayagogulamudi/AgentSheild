@@ -26,7 +26,26 @@ async def get_events(
             query = query.filter(SecurityEvent.decision == decision)
         
         events = query.order_by(SecurityEvent.timestamp.desc()).offset(offset).limit(limit).all()
-        return events
+        
+        # Transform events to ensure checks_passed and checks_failed are lists
+        result = []
+        for event in events:
+            event_dict = {
+                "id": event.id,
+                "timestamp": event.timestamp,
+                "agent_name": event.agent_name,
+                "requested_tool": event.requested_tool,
+                "arguments": event.arguments,
+                "decision": event.decision,
+                "risk_score": event.risk_score,
+                "reason": event.reason,
+                "checks_passed": json.loads(event.checks_passed) if event.checks_passed else [],
+                "checks_failed": json.loads(event.checks_failed) if event.checks_failed else [],
+                "is_demo": event.is_demo
+            }
+            result.append(event_dict)
+        
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

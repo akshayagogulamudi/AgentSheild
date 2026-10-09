@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Activity, AlertTriangle, CheckCircle2, XCircle, Zap } from 'lucide-react'
-import MetricCard from '../components/MetricCard'
+import { Activity, CheckCircle2, XCircle, AlertTriangle, Zap } from 'lucide-react'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
 import DecisionBadge from '../components/DecisionBadge'
 import RiskBadge from '../components/RiskBadge'
 import { getEvents, getThreats } from '../services/api'
@@ -34,78 +34,195 @@ export default function Overview() {
   const injectionThreats = threats.filter((t) => t.threat_category === 'prompt_injection').length
   const exfiltrationThreats = threats.filter((t) => t.threat_category === 'data_exfiltration').length
 
-  const recentIncidents = events.slice(0, 5)
+  const timelineData = [
+    { time: '09:00', requests: 5, blocked: 1 },
+    { time: '09:15', requests: 8, blocked: 2 },
+    { time: '09:30', requests: 6, blocked: 1 },
+    { time: '09:45', requests: 12, blocked: 3 },
+    { time: '10:00', requests: 9, blocked: 2 },
+    { time: '10:15', requests: 14, blocked: 4 },
+  ]
+
+  const threatData = [
+    { name: 'Injection', value: injectionThreats || 1, color: '#06b6d4' },
+    { name: 'Exfiltration', value: exfiltrationThreats || 1, color: '#ef4444' },
+  ]
+
+  const decisionData = [
+    { name: 'Allowed', value: allowed || 1, color: '#22c55e' },
+    { name: 'Blocked', value: blocked || 1, color: '#ef4444' },
+    { name: 'Pending', value: pending || 1, color: '#f59e0b' },
+  ]
+
+  const recentIncidents = events.slice(0, 10)
 
   if (loading) {
-    return (
-      <div className="space-y-6 animate-pulse">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-32 bg-slate-800 rounded-lg" />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[...Array(2)].map((_, i) => (
-            <div key={i} className="h-32 bg-slate-800 rounded-lg" />
-          ))}
-        </div>
-      </div>
-    )
+    return <div className="p-8 text-slate-400">Loading...</div>
   }
 
   return (
-    <div className="space-y-6">
-      {/* Main metrics row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard title="Total Requests" value={totalRequests} icon={<Activity className="w-full h-full" />} color="blue" />
-        <MetricCard title="Allowed" value={allowed} icon={<CheckCircle2 className="w-full h-full" />} color="green" />
-        <MetricCard title="Blocked" value={blocked} icon={<XCircle className="w-full h-full" />} color="red" />
-        <MetricCard title="Pending" value={pending} icon={<AlertTriangle className="w-full h-full" />} color="yellow" />
+    <div className="p-8 space-y-8 bg-slate-950 w-full">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+        <p className="text-slate-400 text-sm mt-1">Security Gateway Overview</p>
       </div>
 
-      {/* Threat metrics row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <MetricCard title="Injection Threats" value={injectionThreats} icon={<Zap className="w-full h-full" />} color="cyan" />
-        <MetricCard title="Exfiltration Threats" value={exfiltrationThreats} icon={<AlertTriangle className="w-full h-full" />} color="red" />
-      </div>
-
-      {/* Recent Incidents Table */}
-      <div className="glass border border-slate-700 rounded-lg p-6">
-        <h2 className="text-xl font-bold text-white mb-4">Recent Incidents</h2>
-        {recentIncidents.length === 0 ? (
-          <p className="text-slate-400 text-center py-8">No incidents yet</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-700">
-                  <th className="text-left px-4 py-3 text-slate-400 font-semibold">ID</th>
-                  <th className="text-left px-4 py-3 text-slate-400 font-semibold">Time</th>
-                  <th className="text-left px-4 py-3 text-slate-400 font-semibold">Agent</th>
-                  <th className="text-left px-4 py-3 text-slate-400 font-semibold">Tool</th>
-                  <th className="text-left px-4 py-3 text-slate-400 font-semibold">Decision</th>
-                  <th className="text-left px-4 py-3 text-slate-400 font-semibold">Risk Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentIncidents.map((event) => (
-                  <tr key={event.id} className="border-b border-slate-800 hover:bg-slate-800/30 transition-colors">
-                    <td className="px-4 py-3 text-slate-200 font-mono text-xs">{event.id}</td>
-                    <td className="px-4 py-3 text-slate-300">{new Date(event.timestamp).toLocaleString()}</td>
-                    <td className="px-4 py-3 text-slate-300">{event.agent_name}</td>
-                    <td className="px-4 py-3 text-slate-300">{event.requested_tool}</td>
-                    <td className="px-4 py-3">
-                      <DecisionBadge decision={event.decision as 'ALLOW' | 'BLOCK' | 'REQUIRE_APPROVAL'} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <RiskBadge tier={event.risk_score > 75 ? 'CRITICAL' : event.risk_score > 50 ? 'HIGH' : event.risk_score > 25 ? 'MEDIUM' : 'LOW'} score={event.risk_score} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Metrics - 5 Cards */}
+      <div className="grid grid-cols-5 gap-4">
+        <div className="bg-slate-800 border border-slate-700 rounded p-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-slate-400 text-xs uppercase font-bold">Total</p>
+              <p className="text-white text-2xl font-bold mt-2">{totalRequests}</p>
+            </div>
+            <Activity className="w-8 h-8 text-blue-400/30" />
           </div>
-        )}
+        </div>
+        <div className="bg-slate-800 border border-slate-700 rounded p-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-slate-400 text-xs uppercase font-bold">Allowed</p>
+              <p className="text-green-400 text-2xl font-bold mt-2">{allowed}</p>
+            </div>
+            <CheckCircle2 className="w-8 h-8 text-green-400/30" />
+          </div>
+        </div>
+        <div className="bg-slate-800 border border-slate-700 rounded p-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-slate-400 text-xs uppercase font-bold">Blocked</p>
+              <p className="text-red-400 text-2xl font-bold mt-2">{blocked}</p>
+            </div>
+            <XCircle className="w-8 h-8 text-red-400/30" />
+          </div>
+        </div>
+        <div className="bg-slate-800 border border-slate-700 rounded p-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-slate-400 text-xs uppercase font-bold">Pending</p>
+              <p className="text-amber-400 text-2xl font-bold mt-2">{pending}</p>
+            </div>
+            <AlertTriangle className="w-8 h-8 text-amber-400/30" />
+          </div>
+        </div>
+        <div className="bg-slate-800 border border-slate-700 rounded p-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-slate-400 text-xs uppercase font-bold">Threats</p>
+              <p className="text-cyan-400 text-2xl font-bold mt-2">{injectionThreats + exfiltrationThreats}</p>
+            </div>
+            <Zap className="w-8 h-8 text-cyan-400/30" />
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Row 1 */}
+      <div className="grid grid-cols-2 gap-6">
+        {/* Timeline */}
+        <div className="bg-slate-800 border border-slate-700 rounded p-6">
+          <h3 className="text-white font-bold mb-4">Security Timeline</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <AreaChart data={timelineData}>
+              <defs>
+                <linearGradient id="colorReq" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+              <XAxis dataKey="time" stroke="#94a3b8" />
+              <YAxis stroke="#94a3b8" />
+              <Tooltip />
+              <Area type="monotone" dataKey="requests" stroke="#06b6d4" fill="url(#colorReq)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Pie Chart */}
+        <div className="bg-slate-800 border border-slate-700 rounded p-6">
+          <h3 className="text-white font-bold mb-4">Threats</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie data={threatData} cx="50%" cy="50%" innerRadius={50} outerRadius={90} dataKey="value">
+                {threatData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Charts Row 2 */}
+      <div className="grid grid-cols-2 gap-6">
+        {/* Bar Chart */}
+        <div className="bg-slate-800 border border-slate-700 rounded p-6">
+          <h3 className="text-white font-bold mb-4">Decisions</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={decisionData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+              <XAxis dataKey="name" stroke="#94a3b8" />
+              <YAxis stroke="#94a3b8" />
+              <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                {decisionData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Stats */}
+        <div className="space-y-4">
+          <div className="bg-slate-800 border border-slate-700 rounded p-4">
+            <p className="text-slate-400 text-xs uppercase font-bold mb-2">Injection Threats</p>
+            <p className="text-cyan-400 text-2xl font-bold">{injectionThreats}</p>
+          </div>
+          <div className="bg-slate-800 border border-slate-700 rounded p-4">
+            <p className="text-slate-400 text-xs uppercase font-bold mb-2">Exfiltration</p>
+            <p className="text-red-400 text-2xl font-bold">{exfiltrationThreats}</p>
+          </div>
+          <div className="bg-slate-800 border border-slate-700 rounded p-4">
+            <p className="text-slate-400 text-xs uppercase font-bold mb-2">Block Rate</p>
+            <p className="text-green-400 text-2xl font-bold">{totalRequests > 0 ? Math.round((blocked / totalRequests) * 100) : 0}%</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-slate-800 border border-slate-700 rounded overflow-hidden">
+        <div className="bg-slate-900 px-6 py-4 border-b border-slate-700">
+          <h2 className="text-white font-bold">Recent Events</h2>
+        </div>
+        <table className="w-full">
+          <thead>
+            <tr className="bg-slate-900/50 border-b border-slate-700">
+              <th className="text-left px-6 py-3 text-slate-300 text-sm font-semibold">ID</th>
+              <th className="text-left px-6 py-3 text-slate-300 text-sm font-semibold">Time</th>
+              <th className="text-left px-6 py-3 text-slate-300 text-sm font-semibold">Agent</th>
+              <th className="text-left px-6 py-3 text-slate-300 text-sm font-semibold">Tool</th>
+              <th className="text-left px-6 py-3 text-slate-300 text-sm font-semibold">Decision</th>
+              <th className="text-left px-6 py-3 text-slate-300 text-sm font-semibold">Risk</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recentIncidents.map((event) => (
+              <tr key={event.id} className="border-b border-slate-700 hover:bg-slate-700/20">
+                <td className="px-6 py-3 text-slate-300 text-sm">#{event.id}</td>
+                <td className="px-6 py-3 text-slate-300 text-sm">{new Date(event.timestamp).toLocaleString()}</td>
+                <td className="px-6 py-3 text-slate-300 text-sm">{event.agent_name}</td>
+                <td className="px-6 py-3 text-slate-200 text-sm">{event.requested_tool}</td>
+                <td className="px-6 py-3">
+                  <DecisionBadge decision={event.decision as 'ALLOW' | 'BLOCK' | 'REQUIRE_APPROVAL'} />
+                </td>
+                <td className="px-6 py-3">
+                  <RiskBadge tier={event.risk_score > 75 ? 'CRITICAL' : event.risk_score > 50 ? 'HIGH' : event.risk_score > 25 ? 'MEDIUM' : 'LOW'} score={event.risk_score} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   )

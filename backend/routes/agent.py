@@ -161,8 +161,8 @@ async def agent_mock(
             user_message = request.get("user_message", user_message)
             agent_role = request.get("agent_role", agent_role)
         
-        # Call mock agent with scenario
-        agent_response = agent_service._call_mock_agent(user_message, agent_role)
+        # Call mock agent with specific scenario
+        agent_response = agent_service.mock_agent.respond_with_scenario(scenario, user_message)
         
         # Process through gateway (same as /api/agent/message)
         gateway_decisions = []
