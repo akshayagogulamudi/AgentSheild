@@ -17,7 +17,12 @@ export const agentsQ = q("agents", async () => {
   } catch (error) {
     console.warn("Backend agents unavailable, using mock data");
   }
-  return api.getMockAgents();
+  // Return mock agents
+  return [
+    { id: "1", name: "InboxAssistant", status: "active", created_at: new Date().toISOString() },
+    { id: "2", name: "DevOpsAgent", status: "active", created_at: new Date().toISOString() },
+    { id: "3", name: "FinanceBot", status: "inactive", created_at: new Date().toISOString() },
+  ];
 });
 
 // Use backend API for resources
@@ -73,7 +78,7 @@ export const logsQ = q("audit_logs", async () => {
   try {
     return await api.getLogs();
   } catch (error) {
-    console.warn("Backend audit logs unavailable, using Supabase fallback");
-    return (await supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(500)).data ?? [];
+    console.warn("Backend audit logs unavailable");
+    return [];
   }
 });
