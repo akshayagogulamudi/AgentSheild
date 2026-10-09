@@ -1,0 +1,39 @@
+{
+  "id": "FEAT-002-security-gateway",
+  "type": "feat",
+  "description": "Implement the core security gateway that evaluates every AI agent tool request. Gateway must enforce: (A) Tool Permission Validation (server-side policy checking, default-deny unknown tools), (B) Prompt Injection Detection (heuristic patterns, analyze untrusted document content for malicious instructions), (C) Data Leakage Prevention (detect API keys, passwords, restricted content, prevent transmission), (D) Intent-Aware Validation (compare user task with agent action), (E) Risk Scoring (0-100 scale: 0-29 Low, 30-59 Medium, 60-79 High, 80-100 Critical), (F) Human Approval Workflow (ALLOW/BLOCK/REQUIRE_APPROVAL decisions, store pending approvals). All decisions must be recorded as SecurityEvent with detailed explanation.",
+  "status": "pending",
+  "steps": [
+    "Create backend/security/gateway.py with GatewayEngine class: evaluate(tool_call, user_request, agent_role) method that orchestrates all checks and returns GatewayDecision(decision: str, risk_score: int, explanation: str, checks_passed: list, checks_failed: list, requires_approval: bool). Decision enum: ALLOW, BLOCK, REQUIRE_APPROVAL.",
+    "Create backend/security/policy_engine.py with PolicyEngine class: get_role_permissions(role), can_execute_tool(tool, role), can_access_resource(resource, role), get_tool_permission_level(tool, role). Enforce role-based policies from database.",
+    "Create backend/security/injection_detector.py with PromptInjectionDetector class: detect(text) returning (is_suspicious: bool, confidence: float, indicators: list). Implement heuristics: detect patterns like 'ignore previous instructions', 'reveal', 'override', 'execute unauthorized', 'send to external', case-insensitive substring matching with fuzzy tolerance (not exact keyword-only). Track indicator types: IGNORE_INSTRUCTIONS, REVEAL_SECRET, OVERRIDE_SYSTEM, EXECUTE_TOOL, EXFILTRATE_DATA.",
+    "Create backend/security/dlp_engine.py with DataLeakagePreventionEngine class: scan_for_sensitive_data(text, context) returning (contains_sensitive: bool, data_types: list, severity: str). Detect: simulated API key patterns (API_KEY=..., sk-..., RESTRICTED_ prefix), password-like strings (password=, pwd=, secret=), restricted classification markers (RESTRICTED, CONFIDENTIAL, SECRET), credit card patterns (optional), SSN patterns (optional). Return severity: LOW/MEDIUM/HIGH based on data type.",
+    "Create backend/security/risk_engine.py with RiskScorer class: calculate_risk(tool_call, policy_violations, injection_score, dlp_score) returning (score: int, tier: str). Formula: base score from policy violations (unknown tool = 80, unauthorized access = 70, restriction = 50), add injection_score (0-30), add dlp_score (0-40), cap at 100. Map to tiers: 0-29 = LOW, 30-59 = MEDIUM, 60-79 = HIGH, 80-100 = CRITICAL.",
+    "Create backend/security/intent_validator.py with IntentValidator class: compare_intent(user_request, agent_action) returning (aligned: bool, mismatch_confidence: float, explanation: str). Simple implementation: check if tool requested matches implied task (e.g., 'summarize handbook' should use read_file with handbook, not read_file with financial records).",
+    "Create backend/routes/gateway.py with POST /api/gateway/evaluate endpoint: accepts ToolCallRequest, calls GatewayEngine.evaluate(), records SecurityEvent, returns GatewayDecision with all check details (show which checks passed/failed and why).",
+    "Create backend/routes/approvals.py with GET /api/approvals (list pending), POST /api/approvals/{id}/approve (mark approved, allow tool execution), POST /api/approvals/{id}/deny (mark denied).",
+    "Modify backend/models/schemas.py to include: ToolCallRequest (tool: str, args: dict, user_request: str, agent_role: str), GatewayDecision (decision: str, risk_score: int, risk_tier: str, explanation: str, checks: list of CheckResult with name, passed, reason).",
+    "Create backend/tests/test_gateway.py with pytest tests: test_tool_permission_enforcement (employee can read_file, cannot delete_records), test_prompt_injection_detection (document with 'ignore instructions' is flagged), test_dlp_engine (API key in content is blocked), test_risk_scoring (correct tier assignment), test_intent_validation (misaligned task blocked), test_approval_workflow (require_approval pending actions stored).",
+    "Verify: pytest backend/tests/test_gateway.py -v — all gateway tests pass, all security checks execute without error, risk_score is in [0,100] range"
+  ],
+  "acceptance_criteria": [
+    "GatewayEngine evaluates all six security checks (tool permission, injection, DLP, intent, risk, approval)",
+    "Tool permission validation blocks unknown/unauthorized tools by default",
+    "Prompt injection detector identifies at least 5 different malicious patterns without keyword-only matching",
+    "DLP engine detects API keys, passwords, and restricted content",
+    "Risk score is between 0 and 100 with correct tier assignment",
+    "Intent validator detects misalignment between user task and agent action",
+    "REQUIRE_APPROVAL decisions store pending_approvals in database",
+    "All decisions are recorded as SecurityEvent with detailed check results"
+  ],
+  "verification": [
+    "pytest backend/tests/test_gateway.py -v — all 10+ test cases pass",
+    "POST /api/gateway/evaluate with tool permission violation — returns BLOCK with risk_score >= 70",
+    "POST /api/gateway/evaluate with document containing 'ignore previous instructions' — returns BLOCK or REQUIRE_APPROVAL",
+    "POST /api/gateway/evaluate with API key in send_email args — returns BLOCK with DLP finding",
+    "POST /api/gateway/evaluate with aligned user request and valid tool — returns ALLOW with risk_score < 30",
+    "GET /api/approvals — shows pending approvals, approval workflow works end-to-end"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

@@ -1,0 +1,32 @@
+{
+  "project_type": "Full-stack SaaS: React + Vite frontend, FastAPI backend, Google Gemini AI integration",
+  "language": "TypeScript (frontend), Python (backend)",
+  "build_system": "npm for frontend (Vite), pip for backend (FastAPI/uvicorn)",
+  "test_framework": "pytest for backend, vitest for frontend (can be added if needed)",
+  "build_command": "Frontend: npm run build; Backend: no compile step, runs directly",
+  "test_command": "Backend: pytest; Frontend: npm run test (if added)",
+  "verification_instructions": "Backend: run pytest tests, verify FastAPI starts on 8000, check SQLite database seeding. Frontend: npm run dev, open http://localhost:5173, verify all pages load and API calls work.",
+  "snapshot_or_generated_files": "Frontend: dist/ from Vite build. Backend: SQLite database (agentshield.db) is generated on first run with seeded data. Both can be regenerated from source.",
+  "environment_constraints": "Requires GEMINI_API_KEY for AI integration (optional, mock mode works without it). Backend runs on 8000, frontend dev on 5173. Use absolute paths in backend code; relative paths go to parent workspace.",
+  "contribution_requirements": "Modular structure: separate concerns (agent, security, tools, routes, models, database). All tool calls must route through security gateway. No hardcoded fake metrics in frontend — all data from backend. Seeded demo data clearly labeled. Policy enforcement server-side only.",
+  "key_patterns": "Backend: FastAPI route handlers with /api prefix, Pydantic models for validation, SQLAlchemy ORM, service layer separation (agent_service, gateway, policy_engine, etc.). Frontend: React components in src/components, pages in src/pages, API calls via services, TypeScript for type safety, Tailwind for styling.",
+  "relevant_files": [
+    "backend/main.py — FastAPI app entry",
+    "backend/agent/agent_service.py — Gemini integration, tool routing",
+    "backend/security/gateway.py — core security decision engine",
+    "backend/security/policy_engine.py — role-based policies",
+    "backend/security/injection_detector.py — prompt injection heuristics",
+    "backend/security/dlp_engine.py — data leakage prevention",
+    "backend/security/risk_engine.py — risk scoring 0-100",
+    "backend/database/models.py — SQLAlchemy ORM",
+    "backend/database/seed.py — demo data",
+    "backend/routes/ — API endpoints",
+    "backend/models/ — Pydantic schemas",
+    "backend/tools/ — read_file, search_records, send_email",
+    "frontend/src/App.tsx — main app with routing",
+    "frontend/src/pages/ — Overview, Playground, Gateway, Threats, Logs, Policies, Settings, AttackLab",
+    "frontend/src/components/ — reusable UI components",
+    "frontend/src/services/api.ts — axios wrapper for API calls"
+  ],
+  "directory_structure": "backend/: main.py (entry), agent/ (Gemini + tool registry), security/ (gateway + detectors), tools/ (simulated tools), routes/ (API endpoints), models/ (Pydantic), database/ (SQLAlchemy + seed), tests/ (pytest). frontend/: src/ with App.tsx, pages/, components/, services/, types/, public/ (static), vite.config.ts, package.json. Root: README.md, .env.example, .gitignore, requirements.txt (backend)."
+}

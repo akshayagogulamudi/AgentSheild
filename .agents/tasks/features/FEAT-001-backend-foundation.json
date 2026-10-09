@@ -1,0 +1,41 @@
+{
+  "id": "FEAT-001-backend-foundation",
+  "type": "feat",
+  "description": "Build the FastAPI backend foundation with SQLite database, ORM models, seeded demo data (public policies, employee handbook, confidential financial records, simulated API credentials), and three simulated tools (read_file, search_records, send_email). All tools must be non-functional stubs that store actions in the database. Database schema: security_events, threats, activity_logs, policies, pending_approvals, simulated_files (with security classification), simulated_records, email_outbox. Backend must run on port 8000 with CORS enabled.",
+  "status": "pending",
+  "steps": [
+    "Create backend/ directory with subdirectories: agent/, security/, tools/, routes/, models/, database/, tests/",
+    "Create backend/requirements.txt with FastAPI, uvicorn, SQLAlchemy, pydantic, python-dotenv, google-generativeai, pytest dependencies",
+    "Create backend/main.py with FastAPI app, CORS setup, health check endpoint (/health), and import of all route handlers",
+    "Create backend/database/models.py with SQLAlchemy ORM classes: SecurityEvent, Threat, ActivityLog, Policy, PendingApproval, SimulatedFile (with classification enum: PUBLIC/INTERNAL/RESTRICTED), SimulatedRecord, EmailOutbox",
+    "Create backend/database/database.py with SQLAlchemy engine and session factory for SQLite (agentshield.db)",
+    "Create backend/database/seed.py with function to seed demo data: 3 policies (employee/manager/admin roles with different tool permissions), 5 simulated files (public handbook, internal reports, restricted financial records containing API key placeholders), 10 simulated records (employee data), system initialization check to avoid re-seeding",
+    "Create backend/models/ directory with Pydantic schemas: RequestSchema, ToolCallRequest, SecurityEventSchema, ThreatSchema, PolicySchema, ApprovalSchema",
+    "Create backend/tools/file_tool.py with read_file function stub (validates filename against allowlist, returns file content from SimulatedFile, records activity)",
+    "Create backend/tools/database_tool.py with search_records function stub (searches SimulatedRecord by query, returns results, records activity)",
+    "Create backend/tools/email_tool.py with send_email function stub (stores to EmailOutbox, records activity, never sends real email)",
+    "Create backend/routes/health.py with /health and /api/status endpoints",
+    "Create backend/routes/events.py with GET /api/events (list SecurityEvents with filtering), POST /api/events (record new event)",
+    "Create backend/routes/policies.py with GET /api/policies, GET /api/policies/{id}, PUT /api/policies/{id} (with validation)",
+    "Verify: cd backend && python -m pytest tests/ -v (create minimal test file), verify backend starts with uvicorn main:app --reload --port 8000, check SQLite database is created with tables, verify seeded data loads"
+  ],
+  "acceptance_criteria": [
+    "Backend starts on http://localhost:8000 with no errors",
+    "Health check endpoint returns 200 OK",
+    "SQLite database (agentshield.db) is created with correct schema",
+    "Seeded demo data is loaded on first run (policies, files, records)",
+    "All four tool stub functions exist and record activities",
+    "GET /api/policies returns demo policies",
+    "GET /api/events returns activity log entries",
+    "CORS is enabled for frontend origin (localhost:5173)"
+  ],
+  "verification": [
+    "cd backend && python -m pytest tests/ -v — all tests pass",
+    "uvicorn main:app --reload --port 8000 — server starts without error",
+    "curl http://localhost:8000/health — returns 200 with status",
+    "curl http://localhost:8000/api/policies — returns list of policies",
+    "Verify agentshield.db file exists and contains expected tables via sqlite3 CLI"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

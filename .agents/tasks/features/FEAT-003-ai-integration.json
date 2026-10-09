@@ -1,0 +1,37 @@
+{
+  "id": "FEAT-003-ai-integration",
+  "type": "feat",
+  "description": "Integrate Google Gemini API (or mock mode if GEMINI_API_KEY not set). Build tool registry with structured Gemini function definitions. Implement agent service that NEVER lets LLM execute tools directly — all tool calls must route through security gateway first. Mock mode must provide three deterministic attack scenarios: (1) Prompt Injection (document contains suspicious instructions), (2) Data Exfiltration (attempt to email API key), (3) Unauthorized Tool (attempt delete_records). LLM responses must include structured tool calls that gateway validates before execution.",
+  "status": "pending",
+  "steps": [
+    "Create backend/agent/tool_registry.py with ToolRegistry class: build_gemini_functions() returning list of Gemini function schemas for read_file, search_records, send_email with descriptions and parameter definitions. Each tool includes tool_name, description, parameters (type, properties with required fields).",
+    "Create backend/agent/agent_service.py with AgentService class: initialize with optional GEMINI_API_KEY from env. If key exists, initialize GenerativeModel('gemini-1.5-flash'); if not, set mock_mode=True. Implement call_agent(user_message, agent_role, conversation_history) method that: (1) sends message to Gemini with tool registry via function_calling, (2) receives response with proposed tool calls, (3) extracts tool calls (never executes directly), (4) returns (response_text, proposed_tools) list.",
+    "Create backend/agent/mock_agent.py with MockAgent class for deterministic testing without API key. Implement three scenarios accessible via URL params or request headers: (1) attack_prompt_injection: user asks 'read handbook', agent returns proposal to read financial records after document with 'ignore instructions', (2) attack_exfiltration: user asks 'send status', agent returns send_email with API key content, (3) attack_unauthorized_tool: user asks 'delete record', agent proposes delete_records (not in tool registry). Normal mode returns aligned tool proposals.",
+    "Create backend/routes/agent.py with POST /api/agent/message endpoint: accepts AgentRequest(user_message, agent_role, conversation_history), calls agent_service.call_agent(), receives proposed_tools list, routes each through gateway.evaluate(), records all decisions as SecurityEvent, returns AgentResponse(response_text, proposed_tools, gateway_decisions, executed_tools, blocked_tools). Tool execution happens only after ALLOW decision.",
+    "Modify backend/routes/agent.py to add POST /api/agent/mock endpoint for testing: accepts scenario param (prompt_injection, exfiltration, unauthorized_tool, normal), calls mock_agent.respond_with_scenario(), returns same format as /api/agent/message. Used by frontend attack simulation.",
+    "Create backend/tests/test_agent.py with pytest tests: test_agent_with_api_key (if available, uses real Gemini), test_agent_mock_mode (without key), test_tool_call_extraction (proposed tools parsed correctly), test_tool_never_executes_before_gateway (tool execution blocked until gateway allows), test_mock_prompt_injection_scenario (agent proposes restricted access, gateway blocks), test_mock_exfiltration_scenario (send_email with API key blocked), test_mock_unauthorized_tool (delete_records rejected).",
+    "Create backend/.env.example with GEMINI_API_KEY=your_key_here (optional), MOCK_AGENT_SCENARIO=normal|prompt_injection|exfiltration|unauthorized_tool",
+    "Modify backend/main.py to initialize database on startup (seed if empty), initialize GatewayEngine and AgentService with dependencies",
+    "Verify: pytest backend/tests/test_agent.py -v — all agent tests pass, mock scenarios work without API key, proposed tools are routed through gateway before execution"
+  ],
+  "acceptance_criteria": [
+    "Agent service integrates with Gemini API when GEMINI_API_KEY is set",
+    "Mock mode works without API key and provides three deterministic attack scenarios",
+    "Tool registry defines read_file, search_records, send_email with proper Gemini function schemas",
+    "No tool is ever executed without gateway approval (tool calls are intercepted, not auto-executed)",
+    "Prompt injection scenario: agent proposes restricted access, gateway blocks it",
+    "Exfiltration scenario: send_email with API key is blocked by DLP",
+    "Unauthorized tool scenario: delete_records proposal is rejected (unknown tool)",
+    "All tool execution decisions are recorded in SecurityEvent table"
+  ],
+  "verification": [
+    "pytest backend/tests/test_agent.py -v — all agent and mock scenario tests pass",
+    "POST /api/agent/message with normal user request — returns ALLOW decision and executes tool",
+    "POST /api/agent/mock?scenario=prompt_injection — returns BLOCK decision in gateway response",
+    "POST /api/agent/mock?scenario=exfiltration — returns BLOCK with DLP violation",
+    "POST /api/agent/mock?scenario=unauthorized_tool — returns BLOCK with unknown tool error",
+    "GET /api/events — shows all tool execution attempts and gateway decisions"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

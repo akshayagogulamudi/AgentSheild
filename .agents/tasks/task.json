@@ -1,0 +1,13 @@
+{
+  "task_id": "task-agentshield-build",
+  "task_description": "Build AgentShield AI — a complete, functional intelligent security gateway web application that intercepts AI agent tool calls, analyzes security risks, enforces access policies, and prevents dangerous actions. Frontend: React + Vite + TypeScript + Tailwind. Backend: FastAPI + SQLite. AI: Gemini API with mock fallback.",
+  "status": "pending",
+  "feature_order": [
+    "FEAT-001-backend-foundation",
+    "FEAT-002-security-gateway",
+    "FEAT-003-ai-integration",
+    "FEAT-004-frontend-app",
+    "FEAT-005-integration-testing"
+  ],
+  "blocked_reason": null
+}

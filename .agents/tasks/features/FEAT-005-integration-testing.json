@@ -1,0 +1,40 @@
+{
+  "id": "FEAT-005-integration-testing",
+  "type": "test",
+  "description": "Build end-to-end integration tests and deployment verification. Test complete workflows: normal agent request (user → agent → gateway → allowed → executed), attack detection (three scenarios blocked by gateway), approval workflow (tool request held pending, then approved/denied), database consistency, API contract validation, frontend-backend handshake. Include deployment docs, troubleshooting guide, and hackathon readiness checklist.",
+  "status": "pending",
+  "steps": [
+    "Create backend/tests/test_integration.py with pytest integration tests: test_full_workflow_normal (user request → agent → gateway allow → tool executed), test_workflow_prompt_injection (gateway blocks, records threat), test_workflow_exfiltration (DLP blocks email), test_workflow_unauthorized_tool (unknown tool rejected), test_approval_workflow (request stored as pending, approval triggers execution, denial blocks), test_database_consistency (after 10 requests, event count matches, no orphaned records), test_concurrent_requests (2+ simultaneous requests handled safely)",
+    "Create backend/tests/test_api_contract.py: test all API endpoints return correct schema (status codes, response fields match Pydantic models), test CORS headers present, test error responses have error_code and message",
+    "Create frontend/tests/ with basic smoke tests (if vitest added): test Overview page renders and fetches metrics, test Playground sends message, test Threat table filters work",
+    "Create docs/DEPLOYMENT.md with: system requirements (Python 3.9+, Node 18+, pip, npm), installation steps (git clone, backend/pip install -r requirements.txt, npm install in frontend), environment setup (.env.example copy to .env with optional GEMINI_API_KEY), how to run (two terminals: backend uvicorn, frontend npm run dev), how to test (pytest backend, npm run test frontend), troubleshooting (port conflicts, CORS errors, API key not found),  database reset (delete agentshield.db and restart), performance notes (SQLite fine for demo, replace for production)",
+    "Create docs/ARCHITECTURE.md with: system overview (frontend/backend separation, Gemini integration via agent service), security gateway flow (tool call interception, 6-check pipeline), database schema, API endpoints list (/api/events, /api/agent/message, /api/gateway/evaluate, etc.), threat model (what threats are detected, what are out of scope), deployment considerations",
+    "Create docs/ATTACKS.md with: explanation of three demo attacks (prompt injection, exfiltration, unauthorized tool), how they work, how gateway detects/blocks them, how to trigger in UI (Attack Lab page), expected blocked behavior",
+    "Create README.md at project root with: project description (AgentShield AI tagline), quick start (clone, pip/npm install, run), feature overview (7 pages + attack lab), screenshot descriptions (if images added), architecture diagram description, contribution guidelines, license",
+    "Create .gitignore with: backend (__pycache__/, *.pyc, .env, agentshield.db, .pytest_cache, venv/), frontend (node_modules/, dist/, .env.local), OS (*.swp, .DS_Store, Thumbs.db)",
+    "Create HACKATHON_CHECKLIST.md: (✓) Backend runs without errors, (✓) Frontend runs on Vite, (✓) All 8 pages accessible, (✓) API endpoints respond, (✓) Database seeded with demo data, (✓) Attack Lab scenarios work, (✓) Threat Detection shows blocked requests, (✓) No API keys in frontend code, (✓) No real emails sent, (✓) Responsive design, (✓) No console errors, (✓) README and docs complete",
+    "Run full integration test suite: pytest backend/tests/ -v, verify all tests pass, verify no FAILED outcomes",
+    "Manual end-to-end walkthrough: (1) Start backend, (2) Start frontend, (3) Visit Overview (metrics load), (4) Send message in Playground (gateway decision shown), (5) Visit AttackLab (run prompt injection, verify BLOCK), (6) Visit ThreatDetection (see blocked threat), (7) Visit ActivityLogs (see all events), (8) Visit Policies (view/edit), verify no errors"
+  ],
+  "acceptance_criteria": [
+    "All pytest integration tests pass (no FAILED)",
+    "All API endpoints return correct status codes and response schemas",
+    "Three attack scenarios are blocked by gateway with correct threat recorded",
+    "Database remains consistent after concurrent requests",
+    "Frontend loads all pages without errors and fetches data from API",
+    "DEPLOYMENT.md and ARCHITECTURE.md are complete and accurate",
+    "Hackathon checklist can be completed (all items checkable)",
+    "End-to-end manual test passes: user → agent → gateway → decision → executed/blocked"
+  ],
+  "verification": [
+    "pytest backend/tests/test_integration.py -v — all tests pass",
+    "pytest backend/tests/test_api_contract.py -v — all endpoint tests pass",
+    "Manual walkthrough: complete all 8 steps above with zero errors",
+    "Verify agentshield.db contains events from manual test, threat records for blocked scenarios",
+    "Frontend console (DevTools) shows no errors",
+    "DEPLOYMENT.md can be followed from scratch to working system",
+    "Review HACKATHON_CHECKLIST.md — all items verified and checkable"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
