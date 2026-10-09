@@ -8,24 +8,24 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
-// Types matching backend models
+// Frontend types (what the UI expects)
 export interface AuditLog {
-  id: string;
-  owner_id: string;
+  id: string | number;
+  owner_id?: string;
   agent_name: string;
   action: string;
   target: string;
   threat_level: "low" | "medium" | "high" | "critical";
-  decision: "ALLOW" | "REDACT" | "REVIEW" | "BLOCK";
+  decision: "ALLOW" | "REDACT" | "REVIEW" | "BLOCK" | "REQUIRE_APPROVAL";
   reasons: string[];
-  source: string;
-  executed: boolean;
+  source?: string;
+  executed?: boolean;
   created_at: string;
 }
 
 export interface Agent {
   id: string;
-  name: string;
+  name?: string;
   status: "active" | "inactive";
   created_at: string;
   updated_at?: string;
@@ -33,7 +33,7 @@ export interface Agent {
 
 export interface Email {
   id: string;
-  owner_id: string;
+  owner_id?: string;
   sender: string;
   subject: string;
   body: string;
@@ -46,7 +46,7 @@ export interface Email {
 
 export interface Resource {
   id: string;
-  owner_id: string;
+  owner_id?: string;
   path: string;
   classification: string;
   created_at: string;
@@ -54,11 +54,32 @@ export interface Resource {
 
 export interface Policy {
   id: string;
-  owner_id: string;
+  owner_id?: string;
   name: string;
-  rules: any[];
+  rules?: any[];
   created_at: string;
   updated_at?: string;
+}
+
+// Map backend response to frontend format
+function mapBackendLog(log: any): AuditLog {
+  // Determine threat level from risk score
+  let threat_level: "low" | "medium" | "high" | "critical" = "low";
+  if (log.risk_score >= 70) threat_level = "critical";
+  else if (log.risk_score >= 50) threat_level = "high";
+  else if (log.risk_score >= 30) threat_level = "medium";
+
+  return {
+    id: log.id,
+    agent_name: log.agent_name || "unknown",
+    action: log.requested_tool || log.action || "unknown",
+    target: log.arguments ? JSON.stringify(log.arguments).slice(0, 50) : "N/A",
+    threat_level,
+    decision: log.decision || "ALLOW",
+    reasons: log.checks_failed && log.checks_failed.length > 0 ? log.checks_failed : [log.reason || "Check passed"],
+    executed: !log.is_demo,
+    created_at: log.timestamp || new Date().toISOString(),
+  };
 }
 
 // API Methods
@@ -71,7 +92,8 @@ export const api = {
       });
       if (!response.ok) throw new Error(`Failed to fetch logs: ${response.statusText}`);
       const data = await response.json();
-      return Array.isArray(data) ? data : data.data || [];
+      const logs = Array.isArray(data) ? data : data.data || [];
+      return logs.map(mapBackendLog);
     } catch (error) {
       console.error("Failed to fetch audit logs:", error);
       return [];
